@@ -1,0 +1,39 @@
+input:
+  kafka_franz:
+    seed_brokers:
+      - broker-1:19092
+      - broker-2:19092
+      - broker-3:19092
+    topics:
+      - core.transactions
+      - core.payments
+      - core.credit
+    consumer_group: postgres-raw-writer-v2
+    start_offset: earliest
+
+output:
+  sql_raw:
+    driver: postgres
+    dsn: postgres://airflow:airflow@host.docker.internal:5432/kafka_events?sslmode=disable
+    query: |
+      INSERT INTO public.raw_events
+      (
+        event_id,
+        event_type,
+        payload,
+        kafka_topic,
+        partition_id,
+        kafka_offset
+      )
+      VALUES ($1, $2, $3::jsonb, $4, $5, $6)
+      ON CONFLICT (kafka_topic, partition_id, kafka_offset)
+      DO NOTHING
+    args_mapping: |
+      root = [
+        this.event_id.string(),
+        this.event_type,
+        content().string(),
+        meta("kafka_topic"),
+        meta("kafka_partition").number(),
+        meta("kafka_offset").number()
+      ]
