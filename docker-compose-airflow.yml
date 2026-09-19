@@ -27,8 +27,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
       - AIRFLOW__WEBSERVER__SECRET_KEY=mysecretkey
     volumes:
-     - C:\AirFlow\dags:/opt/airflow/dags
-     - C:\AirFlow\dbt_project:/opt/airflow/dbt_project
+     - ./dags:/opt/airflow/dags
     command: >
       bash -c "
         airflow db migrate &&
